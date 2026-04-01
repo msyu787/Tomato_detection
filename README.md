@@ -1,2 +1,2 @@
 # Tomato_detection
-Smart farm tomato detection - KIST
+Smart farm tomato detection @KIST
