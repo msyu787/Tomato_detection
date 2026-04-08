@@ -1,0 +1,9 @@
+Detection Evaluation Summary
+IOU_THRESH: 0.3
+REQUIRE_CLASS_MATCH: False
+TP: 256
+FP: 3
+FN: 149
+Precision: 0.988417
+Recall: 0.632099
+F1-score: 0.771084
