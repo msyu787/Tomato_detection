@@ -9,9 +9,6 @@ import os
 
 torch.backends.cudnn.benchmark = True
 
-# =========================
-# 경로 / 설정
-# =========================
 MODEL_PATH = r"C:\Users\nva_kist\Desktop\minsun\KIST\Tomato_detect\trained_merge\yolo26n_640\weights\best.pt"
 
 VIDEO_PATH = 0
@@ -21,63 +18,41 @@ IMGSZ = 640
 CONF_THRES = 0.7
 DEVICE = "0"
 
-USE_LEFT_ONLY = True   # True면 왼쪽 화면만 사용, False면 오른쪽 화면 사용
+USE_LEFT_ONLY = True  
 
-# 작은 bbox 제거 기준
+
 MIN_BOX_AREA = 3000
 MIN_BOX_W = 30
 MIN_BOX_H = 30
 
-# =========================
-# Stabilization 설정
-# =========================
 # USE_STABILIZATION = True
 USE_STABILIZATION = False
 SMOOTHING_WINDOW = 30 
 BORDER_TYPE = 'black'
 BORDER_SIZE = -20
 
-# =========================
-# 저장 설정
-# =========================
 SAVE_VIDEO = True
 
-# =========================
-# Class smoothing 설정
-# =========================
 USE_CLASS_SMOOTHING = True
-CLASS_HISTORY_LEN = 5        # 최근 몇 프레임 class를 볼지
-CENTER_DIST_THRES = 50       # 이전 박스와 현재 박스 중심점 거리 기준
+CLASS_HISTORY_LEN = 5       
+CENTER_DIST_THRES = 50  
 
-# =========================
-# Detection persistence 설정
-# =========================
 USE_PERSISTENCE = True
 # USE_PERSISTENCE = False
-PERSIST_FRAMES =  2  # 검출 안 되어도 몇 프레임 유지할지
-SHOW_HOLD_LABEL = False       # hold 상태 표시 여부
+PERSIST_FRAMES =  2  
+SHOW_HOLD_LABEL = False    
 
-# 각 "위치 기반 객체"의 상태 저장
 track_histories = {}
 next_track_id = 0
 
-# =========================
-# 모델 로드
-# =========================
 model = YOLO(MODEL_PATH)
 
-# =========================
-# Stabilizer 초기화
-# =========================
 if USE_STABILIZATION:
     stabilizer = VidStab(
         kp_method='GFTT',
         processing_max_dim=320
     )
 
-# =========================
-# 비디오 캡처
-# =========================
 cap = cv2.VideoCapture(VIDEO_PATH)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2560)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
@@ -116,9 +91,6 @@ while True:
         print("프레임을 읽을 수 없습니다. 종료합니다.")
         break
 
-    # =========================
-    # ZED 좌/우 한쪽만 사용
-    # =========================
     h, w = frame.shape[:2]
     half_w = w // 2
 
@@ -127,9 +99,6 @@ while True:
     else:
         frame_one = frame[:, half_w:]
 
-    # =========================
-    # Video Stabilization
-    # =========================
     if USE_STABILIZATION:
         stabilized = stabilizer.stabilize_frame(
             input_frame=frame_one,
@@ -141,9 +110,6 @@ while True:
     else:
         frame_proc = frame_one
 
-    # =========================
-    # YOLO 추론
-    # =========================
     start = time.time()
 
     results = model.predict(
@@ -164,9 +130,6 @@ while True:
 
     annotated = frame_proc.copy()
 
-    # =========================
-    # 현재 프레임 detection 정리
-    # =========================
     current_dets = []
 
     boxes = results[0].boxes
@@ -188,9 +151,6 @@ while True:
 
             current_dets.append(get_box_info(box_row, conf, cls_id))
 
-    # =========================
-    # Class smoothing + Persistence
-    # =========================
     updated_tracks = {}
     used_prev_ids = set()
 
@@ -198,7 +158,6 @@ while True:
         best_id = None
         best_dist = float("inf")
 
-        # 이전 트랙 중 가장 가까운 중심점 찾기
         for track_id, info in track_histories.items():
             if track_id in used_prev_ids:
                 continue
@@ -210,9 +169,6 @@ while True:
                 best_dist = dist
                 best_id = track_id
 
-        # -------------------------
-        # 매칭 성공
-        # -------------------------
         if best_id is not None:
             used_prev_ids.add(best_id)
             prev_info = track_histories[best_id]
@@ -241,9 +197,6 @@ while True:
                 "matched": True
             }
 
-        # -------------------------
-        # 매칭 실패 → 새 track 생성
-        # -------------------------
         else:
             history = deque([det["cls_id"]], maxlen=CLASS_HISTORY_LEN)
 
@@ -263,9 +216,6 @@ while True:
             }
             next_track_id += 1
 
-    # =========================
-    # Persistence: 이번 프레임에서 안 잡힌 이전 track 유지
-    # =========================
     if USE_PERSISTENCE:
         for track_id, info in track_histories.items():
             if track_id in updated_tracks:
@@ -291,17 +241,12 @@ while True:
 
     track_histories = updated_tracks
 
-    # =========================
-    # 그리기
-    # =========================
     for track_id, info in track_histories.items():
         x1, y1, x2, y2 = info["x1"], info["y1"], info["x2"], info["y2"]
         conf = info["conf"]
         cls_id = info["smoothed_cls_id"]
 
         cls_name = model.names[cls_id]
-
-        # 현재 프레임에서 실제 검출된 박스와 hold 박스 색 구분
 
         color = (0, 255, 0)       # green
 
@@ -321,9 +266,6 @@ while True:
             2
         )
 
-    # =========================
-    # FPS 표시
-    # =========================
     cv2.putText(
         annotated,
         f"Infer FPS: {infer_fps:.2f}",
@@ -344,9 +286,6 @@ while True:
         2
     )
 
-    # =========================
-    # 저장용 VideoWriter 초기화
-    # =========================
     if SAVE_VIDEO and out is None:
         save_h, save_w = annotated.shape[:2]
 
@@ -366,9 +305,6 @@ while True:
     if SAVE_VIDEO and out is not None:
         out.write(annotated)
 
-    # =========================
-    # 화면 출력
-    # =========================
     cv2.imshow("YOLO Real-time (ZED one side + persistence)", annotated)
 
     key = cv2.waitKey(1) & 0xFF
