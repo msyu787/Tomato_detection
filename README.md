@@ -6,4 +6,4 @@ Smart farm tomato detection @KIST
 - Ripeness classification for each detected tomato
 
 
-  ![frame_0036_compare](https://github.com/user-attachments/assets/60744ce5-385e-4b25-92e4-9bafef5eb8ee)
+![frame_0036_compare (1)](https://github.com/user-attachments/assets/41fff05d-7dbf-4eff-ba37-c83dd5f36bf5)
