@@ -1,5 +1,5 @@
 # Tomato_detection
-Smart farm tomato detection @KIST
+Smart farm tomato detection @ KIST
 
 - Real-time tomato detection in a smart farm environment
 - ID tracking for individual tomatoes
