@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Tomato Tracker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      color: #333;
+    }
+
+    .wrap {
+      width: 1180px;
+      margin: 24px auto;
+    }
+
+    .header {
+      background: #ffffff;
+      border: 1px solid #d9d9d9;
+      border-radius: 14px;
+      padding: 18px 24px;
+      text-align: center;
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .header-sub {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .header-sub .running {
+      color: #1f9d41;
+      font-weight: 700;
+    }
+
+    .header-sub .stopped {
+      color: #c43c3c;
+      font-weight: 700;
+    }
+
+    .content {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 290px;
+      gap: 20px;
+    }
+
+    .panel {
+      background: #ffffff;
+      border: 1px solid #d9d9d9;
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .camera-title {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .feed-box {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 10px;
+      border: 1px solid #cfcfcf;
+      background: #111;
+      overflow: hidden;
+    }
+
+    .feed-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .bottom-grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 0.85fr;
+      gap: 16px;
+    }
+
+    .card {
+      border-radius: 12px;
+      padding: 16px;
+      background: #fcfcfc;
+      border: 1px solid #d8d8d8;
+    }
+
+    .session-card {
+      border-color: #9fd48e;
+      background: #fbfff9;
+    }
+
+    .settings-card {
+      border-color: #f0c453;
+      background: #fffdf7;
+    }
+
+    .card-title {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .session-card .card-title {
+      color: #4f8d39;
+    }
+
+    .settings-card .card-title {
+      color: #b98300;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      min-width: 110px;
+      height: 38px;
+      border-radius: 8px;
+      border: 1px solid #c8c8c8;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s ease;
+      background: #fff;
+    }
+
+    button:hover {
+      opacity: 0.94;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .start-btn {
+      background: #349641;
+      border-color: #349641;
+      color: #fff;
+    }
+
+    .stop-btn {
+      background: #fff6f6;
+      border-color: #e6a2a2;
+      color: #c73838;
+    }
+
+    .save-btn {
+      width: 100%;
+      background: #fff;
+      border-color: #d7b14a;
+      color: #8b6500;
+    }
+
+    .session-text {
+      text-align: center;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .session-text .running {
+      color: #1f9d41;
+      font-weight: 700;
+    }
+
+    .session-text .stopped {
+      color: #c43c3c;
+      font-weight: 700;
+    }
+
+    .setting-row {
+      margin-bottom: 14px;
+    }
+
+    .setting-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .slider-value {
+      min-width: 44px;
+      text-align: right;
+      font-weight: 700;
+      color: #8b6500;
+    }
+
+    .slider-box {
+      padding: 0 2px;
+    }
+
+    .slider-box input[type="range"] {
+      width: 100%;
+      accent-color: #d7b14a;
+      cursor: pointer;
+    }
+
+    .summary-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .summary-card {
+      border: 1px solid #d9d9d9;
+      border-radius: 12px;
+      padding: 14px;
+      background: #fcfcfc;
+      margin-bottom: 16px;
+    }
+
+    .summary-card.info {
+      border-color: #9ec8ff;
+      background: #f8fbff;
+    }
+
+    .summary-card.count {
+      border-color: #b6d99a;
+      background: #fbfff8;
+    }
+
+    .summary-card.export {
+      border-color: #d7d7d7;
+      background: #fafafa;
+    }
+
+    .summary-card-title {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 14px;
+      border-bottom: 1px solid #ececec;
+    }
+
+    .metric-row:last-child {
+      border-bottom: none;
+    }
+
+    .metric-value {
+      font-weight: 700;
+    }
+
+    .connected {
+      color: #1f9d41;
+    }
+
+    .disconnected {
+      color: #c43c3c;
+    }
+
+    .count-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 15px;
+      padding: 10px 0;
+      border-bottom: 1px solid #ececec;
+    }
+
+    .count-line:last-child {
+      border-bottom: none;
+    }
+
+    .count-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-ripe {
+      background: #f14343;
+    }
+
+    .dot-unripe {
+      background: #41b35d;
+    }
+
+    .count-value {
+      font-weight: 700;
+    }
+
+    .export-btn {
+      width: 100%;
+      background: #ffffff;
+      border-color: #bdbdbd;
+      color: #444;
+    }
+
+    .save-message {
+      margin-top: 8px;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      min-height: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="header-title">Tomato Ripeness Tracker</div>
+      <div class="header-sub">
+        상태:
+        <span id="top-status" class="stopped">Stopped / 중지</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="panel">
+        <div class="camera-title">Realtime camera</div>
+        <div class="feed-box">
+          <img src="{{ url_for('video_feed') }}" alt="ZED stream">
+        </div>
+
+        <div class="bottom-grid">
+          <div class="card session-card">
+            <div class="card-title">Session control</div>
+            <div class="button-row">
+              <button class="start-btn" id="start-btn">▶ Start</button>
+              <button class="stop-btn" id="stop-btn">■ End</button>
+            </div>
+            <div class="session-text">
+              상태:
+              <span id="session-status" class="stopped">Stopped</span>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="card-title">Settings</div>
+
+            <div class="setting-row">
+              <div class="setting-head">
+                <span>Confidence Threshold</span>
+                <span class="slider-value" id="conf-value">0.45</span>
+              </div>
+              <div class="slider-box">
+                <input type="range" id="conf-slider" min="0" max="1" step="0.01" value="0.45">
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-head">
+                <span>IOU Threshold</span>
+                <span class="slider-value" id="iou-value">0.50</span>
+              </div>
+              <div class="slider-box">
+                <input type="range" id="iou-slider" min="0" max="1" step="0.01" value="0.50">
+              </div>
+            </div>
+
+            <button class="save-btn" id="save-btn">설정 저장</button>
+            <div class="save-message" id="save-message"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="summary-title">Summary</div>
+
+        <div class="summary-card info">
+          <div class="summary-card-title">Camera metrics</div>
+          <div class="metric-row">
+            <span>Resolution</span>
+            <span class="metric-value" id="resolution">-</span>
+          </div>
+          <div class="metric-row">
+            <span>Elapsed time</span>
+            <span class="metric-value" id="elapsed">00:00:00</span>
+          </div>
+          <div class="metric-row">
+            <span>Total FPS</span>
+            <span class="metric-value" id="total-fps">0</span>
+          </div>
+          <div class="metric-row">
+            <span>ZED 상태</span>
+            <span class="metric-value disconnected" id="connected">Disconnected</span>
+          </div>
+        </div>
+
+        <div class="summary-card count">
+          <div class="summary-card-title">Count summary</div>
+          <div class="count-line">
+            <div class="count-left">
+              <span class="dot dot-ripe"></span>
+              <span>Ripe</span>
+            </div>
+            <div class="count-value" id="ripe-count">0</div>
+          </div>
+          <div class="count-line">
+            <div class="count-left">
+              <span class="dot dot-unripe"></span>
+              <span>Unripe</span>
+            </div>
+            <div class="count-value" id="unripe-count">0</div>
+          </div>
+          <div class="count-line">
+            <div class="count-left">
+              <span>Total</span>
+            </div>
+            <div class="count-value" id="total-count">0</div>
+          </div>
+        </div>
+
+        <div class="summary-card export">
+          <div class="summary-card-title">Export</div>
+          <button class="export-btn" id="download-btn">↓ CSV 다운로드</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function postAction(url) {
+      try {
+        await fetch(url, { method: "POST" });
+        await updateStatus();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function setRunningView(isRunning) {
+      const topStatus = document.getElementById("top-status");
+      const sessionStatus = document.getElementById("session-status");
+      const startBtn = document.getElementById("start-btn");
+      const stopBtn = document.getElementById("stop-btn");
+
+      if (isRunning) {
+        topStatus.textContent = "Running / 실행 중";
+        topStatus.className = "running";
+        sessionStatus.textContent = "Running";
+        sessionStatus.className = "running";
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+      } else {
+        topStatus.textContent = "Stopped / 중지";
+        topStatus.className = "stopped";
+        sessionStatus.textContent = "Stopped";
+        sessionStatus.className = "stopped";
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+    }
+
+    function syncSliderValue(sliderId, valueId) {
+      const slider = document.getElementById(sliderId);
+      const valueText = document.getElementById(valueId);
+      valueText.textContent = Number(slider.value).toFixed(2);
+    }
+
+    function updateSettingInputs(data) {
+      const confSlider = document.getElementById("conf-slider");
+      const iouSlider = document.getElementById("iou-slider");
+
+      if (document.activeElement !== confSlider) {
+        confSlider.value = data.conf_thres;
+      }
+
+      if (document.activeElement !== iouSlider) {
+        iouSlider.value = data.iou_thres;
+      }
+
+      document.getElementById("conf-value").textContent = Number(confSlider.value).toFixed(2);
+      document.getElementById("iou-value").textContent = Number(iouSlider.value).toFixed(2);
+    }
+
+    async function updateStatus() {
+      try {
+        const res = await fetch("/api/status");
+        const data = await res.json();
+
+        setRunningView(data.running);
+        updateSettingInputs(data);
+
+        document.getElementById("resolution").textContent = data.resolution;
+        document.getElementById("elapsed").textContent = data.elapsed;
+        document.getElementById("total-fps").textContent = data.total_fps;
+        document.getElementById("ripe-count").textContent = data.ripe_count;
+        document.getElementById("unripe-count").textContent = data.unripe_count;
+        document.getElementById("total-count").textContent = data.total_count;
+
+        const connected = document.getElementById("connected");
+        if (data.connected) {
+          connected.textContent = "Connected";
+          connected.className = "metric-value connected";
+        } else {
+          connected.textContent = "Disconnected";
+          connected.className = "metric-value disconnected";
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function saveSettings() {
+      const conf = Number(document.getElementById("conf-slider").value);
+      const iou = Number(document.getElementById("iou-slider").value);
+      const saveMessage = document.getElementById("save-message");
+
+      try {
+        const res = await fetch("/api/settings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            conf_thres: conf,
+            iou_thres: iou
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          saveMessage.textContent = data.message || "설정 저장 실패";
+          saveMessage.style.color = "#c43c3c";
+          return;
+        }
+
+        saveMessage.textContent = "설정이 저장되었습니다.";
+        saveMessage.style.color = "#1f9d41";
+        await updateStatus();
+      } catch (e) {
+        console.error(e);
+        saveMessage.textContent = "설정 저장 실패";
+        saveMessage.style.color = "#c43c3c";
+      }
+    }
+
+    document.getElementById("start-btn").addEventListener("click", () => {
+      postAction("/api/start");
+    });
+
+    document.getElementById("stop-btn").addEventListener("click", () => {
+      postAction("/api/stop");
+    });
+
+    document.getElementById("save-btn").addEventListener("click", saveSettings);
+
+    document.getElementById("download-btn").addEventListener("click", () => {
+      window.location.href = "/download_csv";
+    });
+
+    document.getElementById("conf-slider").addEventListener("input", () => {
+      syncSliderValue("conf-slider", "conf-value");
+    });
+
+    document.getElementById("iou-slider").addEventListener("input", () => {
+      syncSliderValue("iou-slider", "iou-value");
+    });
+
+    setInterval(updateStatus, 500);
+    updateStatus();
+  </script>
+</body>
+</html>
